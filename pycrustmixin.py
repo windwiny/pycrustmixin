@@ -63,6 +63,7 @@ class PycrustMixin():
         notebook = frame.shell.interp.locals['notebook']
         notebook.SetSelection(2)
         notebook.GetPage(2).AppendText(
+            "\n Globals() show in Namespace page\n"
             "\n ---- Set Vars ----\n\n"
             "app:   wx.GetApp()\n"
             "self:  wx.GetApp().GetTopWindow()\n"
@@ -95,10 +96,8 @@ if __name__ == '__main__':
 
         print 'Debug no wx program.  On PycrustFrame set G.exit=True exit\n'
         import time
-        class G2:
+        class G:
             exit = False
-        global G
-        G = G2
         t0 = time.time()
         while not G.exit:
             print '%s running: %d sec' % ('\b' * 80, time.time() - t0),
