@@ -19,6 +19,9 @@ class PycrustMixin():
         itemCrust = menuDebug.Append(-1, "Show PyCrustFrame",
                     "Show PyCrustFrame window")
         self.Bind(wx.EVT_MENU, self.OnItemCrust, itemCrust)
+        itemInspection = menuDebug.Append(-1, "Show Widget Inspection Tool",
+                    "Show Widget Inspection Frame window")
+        self.Bind(wx.EVT_MENU, self.OnItemInspection, itemInspection)
         if not isinstance(menuBar, wx.MenuBar):
             menuBar = self.GetMenuBar()
             if not menuBar:
@@ -42,15 +45,19 @@ class PycrustMixin():
     def ShowCrustFrame(cls):
         cls(nocreatemenu=1).OnItemCrust(None, wx.GetApp().GetTopWindow())
 
+    def OnItemInspection(self, event):
+        import wx.lib.inspection
+        wx.lib.inspection.InspectionTool().Show()
+
     def OnItemCrust(self, event, mainwin=''):
-        from wx.py.crust import CrustFrame
+        import wx.py.crust
         if not isinstance(mainwin, wx.Window):
             if isinstance(self, wx.Window): mainwin = self
             else: mainwin = None
         if not hasattr(self, 'wcount'): self.wcount = 0
         if not hasattr(self, 'kwargs'): self.kwargs = {}
         self.wcount += 1
-        frame = CrustFrame(parent=mainwin,
+        frame = wx.py.crust.CrustFrame(parent=mainwin,
                 title='PyCrust Debug Window :%d' % self.wcount)
         frame.Show()
 
@@ -69,7 +76,10 @@ class PycrustMixin():
             "self:  wx.GetApp().GetTopWindow()\n"
             "crust: PyCrustFrameWindow\n"
             "\n"
-            + unicode(str(self.kwargs), errors='replace')
+            + unicode(str(self.kwargs), errors='replace') +
+            "\n ---- Show Widget Inspection Tool ----\n\n"
+            "import wx.lib.inspection\n"
+            "wx.lib.inspection.InspectionTool().Show()\n"
         )
 
 
