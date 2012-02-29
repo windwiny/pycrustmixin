@@ -85,24 +85,30 @@ class PycrustMixin():
 
 #from pycrustmixin import PycrustMixin
 if __name__ == '__main__':
-    if '--wx1' in sys.argv or '--wx2' in sys.argv:
-        class Demo1(wx.Frame, PycrustMixin):    # demo 1 todo 1
+    if set(sys.argv).intersection(['--wx1', '--wx2', '--wx3']):
+        class Demo1(wx.Frame, PycrustMixin):    ## demo 1 todo 1
             def __init__(self):
                 wx.Frame.__init__(self, None, title='PycrustMixin Demo 1')
-                PycrustMixin.__init__(self)     # demo 1 todo 2
+                PycrustMixin.__init__(self)     ## demo 1 todo 2
         class Demo2(wx.Frame):
             def __init__(self):
                 wx.Frame.__init__(self, None, title='PycrustMixin Demo 2')
-                PycrustMixin.ShowCrustFrame()   # demo 2 todo
-        if '--wx2' in sys.argv:
-            Demo1 = Demo2
+                self.__class__.__bases__ += (PycrustMixin,) ## demo 2 todo 1
+                PycrustMixin.__init__(self)                 ## demo 2 todo 2
+        class Demo3(wx.Frame):
+            def __init__(self):
+                wx.Frame.__init__(self, None, title='PycrustMixin Demo 2')
+                PycrustMixin.ShowCrustFrame()   ## demo 3 todo
+        if '--wx1' in sys.argv:     Demo = Demo1
+        elif '--wx2' in sys.argv:   Demo = Demo2
+        elif '--wx3' in sys.argv:   Demo = Demo3
         app = wx.PySimpleApp()
-        mainwin = Demo1()
+        mainwin = Demo()
         app.SetTopWindow(mainwin)
         mainwin.Show()
         app.MainLoop()
     elif '--nowx' in sys.argv:
-        PycrustMixin.ShowCrustFrameNowx()       # demo 3 todo
+        PycrustMixin.ShowCrustFrameNowx()   ## demo 4 todo
 
         print 'Debug no wx program.  On PycrustFrame set G.exit=True exit\n'
         import time
@@ -116,6 +122,7 @@ if __name__ == '__main__':
     else:
         print '''parameter:
         --wx1    add menu item to mainframe
-        --wx2    show crustframe immediate
+        --wx2    add menu item to mainframe
+        --wx3    show crustframe immediate
         --nowx   debug no wx program
         '''
