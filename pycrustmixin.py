@@ -13,6 +13,11 @@ import wx
 
 class PycrustMixin():
     def __init__(self, menuBar=None, **kwargs):
+        '''
+        @nocreatemenu: if True, not create menu bar
+        @menuBar: wx.Menu instance
+        @kwargs: k1=v1, k2=v2, ...  set pycrust object
+        '''
         if 'nocreatemenu' in kwargs: return
         self.kwargs = kwargs
         menuDebug = wx.Menu()
@@ -30,57 +35,65 @@ class PycrustMixin():
         menuBar.Append(menuDebug, "Debug")
 
     @classmethod
-    def ShowCrustFrameNowx(cls):
+    def ShowCrustFrameNowx(cls, title=''):
         import threading
         def wxapp():
             global app
             app = wx.PySimpleApp(0)
-            cls(nocreatemenu=1).OnItemCrust(None, None)
+            cls(nocreatemenu=1).OnItemCrust(None, None, title)
             app.MainLoop()
         t = threading.Thread(target=wxapp)
         t.daemon = True
         t.start()
 
     @classmethod
-    def ShowCrustFrame(cls):
-        cls(nocreatemenu=1).OnItemCrust(None, wx.GetApp().GetTopWindow())
+    def ShowCrustFrame(cls, title=''):
+        cls(nocreatemenu=1).OnItemCrust(None, wx.GetApp().GetTopWindow(), title)
 
     def OnItemInspection(self, event):
         import wx.lib.inspection
         wx.lib.inspection.InspectionTool().Show()
 
-    def OnItemCrust(self, event, mainwin=''):
+    def OnItemCrust(self, event, mainwin='', title=''):
         import wx.py.crust
         if not isinstance(mainwin, wx.Window):
             if isinstance(self, wx.Window): mainwin = self
             else: mainwin = None
-        if not hasattr(self, 'wcount'): self.wcount = 0
         if not hasattr(self, 'kwargs'): self.kwargs = {}
-        self.wcount += 1
-        frame = wx.py.crust.CrustFrame(parent=mainwin,
-                title='PyCrust Debug Window :%d' % self.wcount)
+        if not title:
+            if not hasattr(self, 'wcount'): self.wcount = 0
+            self.wcount += 1
+            title = 'PyCrust Debug Window :%d' % self.wcount
+        frame = wx.py.crust.CrustFrame(parent=mainwin, title=title)
         frame.Show()
 
         frame.shell.interp.locals['app'] = wx.GetApp()
         frame.shell.interp.locals['self'] = mainwin
         frame.shell.interp.locals['crust'] = frame
+        msg = []
         for k, v in self.kwargs.items():
             frame.shell.interp.locals[str(k)] = v
+            msg.append(u'%s: %s' % (
+                unicode(str(k), 'utf-8', errors='replace'),
+                unicode(str(v), 'utf-8', errors='replace')
+            ))
 
         notebook = frame.shell.interp.locals['notebook']
         notebook.SetSelection(2)
-        notebook.GetPage(2).AppendText(
+        calltip = notebook.GetPage(2)
+        calltip.AppendText(
             "\n Globals() show in Namespace page\n"
-            "\n ---- Set Vars ----\n\n"
+            "\n---- Set Vars ----\n\n"
             "app:   wx.GetApp()\n"
             "self:  wx.GetApp().GetTopWindow()\n"
             "crust: PyCrustFrameWindow\n"
             "\n"
-            + unicode(str(self.kwargs), errors='replace') +
-            "\n ---- Show Widget Inspection Tool ----\n\n"
+            + '\n'.join(msg) +
+            "\n\n---- Howto Show Widget Inspection Tool ----\n\n"
             "import wx.lib.inspection\n"
             "wx.lib.inspection.InspectionTool().Show()\n"
         )
+        calltip.SetInsertionPoint(0)
 
 
 #from pycrustmixin import PycrustMixin
@@ -108,7 +121,7 @@ if __name__ == '__main__':
         mainwin.Show()
         app.MainLoop()
     elif '--nowx' in sys.argv:
-        PycrustMixin.ShowCrustFrameNowx()   ## demo 4 todo
+        PycrustMixin.ShowCrustFrameNowx('Input G.exit=True exit')   ## demo 4 todo
 
         print 'Debug no wx program.  On PycrustFrame set G.exit=True exit\n'
         import time
